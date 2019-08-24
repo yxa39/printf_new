@@ -20,27 +20,19 @@
 # define BUFF_SIZE 100
 # define NUMERALS "0123456789abcdef"
 # define NUMERALS_CAP "0123456789ABCDEF"
+# define MAX "9223372036854775808"
+# define MIN "-9223372036854775808"
 
-typedef struct	s_field
+typedef struct		s_param
 {
-	int	len_field;
-	int	flag_field[5];
-	int	width;
-	int	precision;
-
-	
-}				t_field
-typedef struct	s_value
-{
-	int		len;
-	int		spaces;
-	char	sign;
-	int		hash;
-	int		zeros;
+	int		len_field;
+	int		flag_field[7];
+	int		width;
+	int		precision;
 	char	*str;
-}				t_value
+	int		len;
 
-typedef	struct	
+}					t_param;
 char				*ft_llitoa(long long int n);
 int					get_long_strlen(long long int n);
 int					ft_printf(char *format, ...);
