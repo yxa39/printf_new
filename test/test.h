@@ -12,7 +12,7 @@
 
 #ifndef TEST_H
 # define TEST_H
-#include<libc.h>
+#include<unistd.h>
 
 typedef struct		s_list
 {

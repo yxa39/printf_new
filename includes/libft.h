@@ -20,7 +20,7 @@
 # define BUFF_SIZE 100
 # define NUMERALS "0123456789abcdef"
 # define NUMERALS_CAP "0123456789ABCDEF"
-# define MAX "9223372036854775808"
+# define MAX "9223372036854775807"
 # define MIN "-9223372036854775808"
 
 typedef struct		s_param
@@ -31,10 +31,13 @@ typedef struct		s_param
 	int		precision;
 	char	*str;
 	int		len;
-
+	char	c;
+	int		error;
 }					t_param;
-char				*ft_llitoa(long long int n);
+int					get_un_long_strlen(unsigned long long int n, int base);
 int					get_long_strlen(long long int n);
+char				*ft_un_llitoa(unsigned long long int n, int base, char format);
+char				*ft_llitoa(long long int n);
 int					ft_printf(char *format, ...);
 int					get_next_line(const int fd, char **line);
 void				*ft_memset(void *b, int c, size_t len);
