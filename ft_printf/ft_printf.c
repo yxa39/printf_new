@@ -42,13 +42,11 @@ int		get_width(char **format)
 		width = **format - '0';
 		(*format)++;
 	}
-	//printf("first digit: %d\n", width);
-	while (ft_strchr("0123456789", **format))
+	while (**format && ft_strchr("0123456789", **format))
 	{
 		width = (**format - '0') + width * 10;
 		(*format)++;
 	}
-//	printf("width: %d\n", width);
 	return (width);
 }
 
@@ -65,11 +63,7 @@ void	get_flag_field(char **format, t_param *param)
 		if (**format == '0')
 			*(param->flag_field + 3) = 1;
 		if (**format == '#')
-		{
 			*(param->flag_field + 4) = 1;
-			if (*(param->flag_field + 5) == 1 || param->width != 0 || param->len_field != 0)
-				param->error = 1;
-		}
 		if (**format == '.')
 		{
 			*(param->flag_field + 5) = 1;
@@ -85,15 +79,11 @@ void	print(t_param *param, char format)
 {
 	int	int_len;
 
-	param->len = (int)ft_strlen(param->str);
-	int_len = param->len;
 	if (format == 'c')
-	{
-		int_len = 1;
-		param->len = 1;
-	}
-//	printf("param->len: %d\n", param->len);
-//	printf("width: %d\n", param->width);
+		param->len = 1 + (int)ft_strlen(param->str);
+	else
+		param->len = (int)ft_strlen(param->str);
+	int_len = param->len;
 	if (*(param->flag_field) == 0 && param->width - int_len > 0)
 	{
 		param->len = param->width;
@@ -123,7 +113,7 @@ void	add_sign_prefix(t_param *param, char format)
 	int		i;
 
 	tmp = ft_strdup(param->str);
-	i = *(param->flag_field + 1) + *(param->flag_field + 4) + *(param->flag_field + 1) + *(param->flag_field + 6);
+	i = *(param->flag_field + 1) + *(param->flag_field + 4) * 2 + *(param->flag_field + 6);
 	if (i > 0)
 	{
 		free(param->str);
@@ -136,7 +126,7 @@ void	add_sign_prefix(t_param *param, char format)
 		param->str[i++] = '-';
 	if (*(param->flag_field + 2) == 1 && *(param->flag_field + 1) == 0)
 		param->str[i++] = ' ';
-	if (*(param->flag_field + 4) == 1 && ft_strchr("o", format))
+	if (*(param->flag_field + 4) == 1 && ft_strchr("o", format) && param->precision == 0)
 		param->str[i++] = '0';
 	if (*(param->flag_field + 4) == 1 && ft_strchr("xX", format))
 	{
@@ -145,6 +135,7 @@ void	add_sign_prefix(t_param *param, char format)
 	}
 	while(*tmp)
 		param->str[i++] = *(tmp++);
+	param->str[i] = '\0';
 }
 
 void	get_len_field(char **format, t_param *param)
@@ -152,44 +143,40 @@ void	get_len_field(char **format, t_param *param)
 	if (**format == 'h' && *(*format + 1) == 'h')
 	{
 		param->len_field = 1;
-		(*format) += 2;
+		(*format)++;
 	}
-	else if (**format == 'h' && *(*format + 1) != 'h')
-	{
+	else if ((**format == 'h' && *(*format + 1) != 'h') && param->len_field < 3)
 		param->len_field = 2;
-		*format = *format + 1;
-	}
-	else if (**format == 'l' && *(*format + 1) != 'l')
-	{
+	else if ((**format == 'l' && *(*format + 1) != 'l') || **format == 'z')
 		param->len_field = 3;
-		*format = *format + 1;
-	}
 	else if (**format == 'l' && *(*format + 1) == 'l')
 	{
 		param->len_field = 4;
-		*format = *format + 2;
-	}
-	else if (**format == 'L')
-	{
-		param->len_field = 5;
 		(*format)++;
 	}
+	else if (**format == 'j')
+		param->len_field = 4;
+	else if (**format == 'L')
+		param->len_field = 5;
+	(*format)++;
 }
 
 void	get_param(char **format, t_param *param)
 {
 	init_param(param);
-	while (**format && !ft_strchr("cspdiouxXf%", **format))
+	if (**format && ft_strchr("-+ 0#.hlL123456789jzt", **format))
 	{
-		if (!ft_strchr("-+ 0#.hlL123456789", **format))
+		while (!ft_strchr("csSpdiouUxXf%", **format))
 		{
-			param->error = 1;
-			(*format)++;
+			if (!ft_strchr("-+ 0#.hlL123456789jzt", **format))
+				break;
+			if (**format && ft_strchr("-+ 0#.", **format))
+				get_flag_field(format, param);
+			if (**format && ft_strchr("123456789", **format))
+				param->width = get_width(format);
+			if (**format && ft_strchr("hlLjzt", **format))
+				get_len_field(format, param);
 		}
-		get_flag_field(format, param);
-		if (ft_strchr("123456789", **format))
-			param->width = get_width(format);
-		get_len_field(format, param);
 	}
 }
 
@@ -200,7 +187,10 @@ void	add_zero(t_param *param, int width, char format)
 	int		j;
 	int		len;
 
-	len = ft_strlen(param->str);
+	if (format == 'c')
+		len = 1;
+	else
+		len = (int)ft_strlen(param->str);
 	tmp = ft_strdup(param->str);
 	i = 0;
 	j = *(param->flag_field + 1) + *(param->flag_field + 4) + *(param->flag_field + 6);
@@ -210,12 +200,12 @@ void	add_zero(t_param *param, int width, char format)
 		j++;
 	if (*(param->flag_field + 5) != 1)
 		len += j;
-	if (*(param->flag_field + 3) == 1)
+	if ((*(param->flag_field + 3) == 1 && *(param->flag_field) == 0) || *(param->flag_field + 5) == 1)
 	{
 		if (width - len > 0)
 		{
 			free(param->str);
-			param->str = ft_strnew(width + 1);
+			param->str = ft_strnew(width);
 			while (width - len > 0)
 			{
 				param->str[i++] = '0';
@@ -250,26 +240,19 @@ void	get_s_str(char *str, t_param *param)
 		else
 			param->str = ft_strdup(str);
 	}
-	add_zero(param, param->width, 's');
+	if (*(param->flag_field + 3) == 1)
+		add_zero(param, param->width, 's');
 }
 
 void	get_c_str(char ch, t_param *param)
 {
 	param->precision = 0;
-	*(param->flag_field + 3) = 0;
 	param->c = (char)ch;
+	param->str = ft_strnew(0);
 	add_zero(param, param->width, 'c');
 }
 
-void	get_csp(char format, va_list *ap, t_param *param)
-{
-	if (format == 'c')
-		get_c_str(va_arg(*ap, int), param);
-	if (format == 's')
-		get_s_str(va_arg(*ap, char *), param);
-	if (format == 'p')
-		exit(0);
-}
+
 
 long long int	convert_int_type(long long int num, t_param *param)
 {
@@ -327,25 +310,23 @@ void	get_di_str(long long int num, t_param *param)
 	add_sign_prefix(param, 'd');
 }
 
-
 void	get_ouxX_str(unsigned long long int num, t_param *param, char format)
 {
 	int	base;
 
 	if (format == 'o')
 		base = 8;
-	if (format == 'u')
+	if (format == 'u' || format == 'U')
 		base = 10;
 	if (format == 'x' || format == 'X')
 		base = 16;
-	if (num == 0 && *(param->flag_field + 5) == 1 && param->precision == 0)
+	param->str = ft_un_llitoa(num, base, format);
+	if (ft_strcmp(param->str, "0") == 0)
+		*(param->flag_field + 4) = 0;
+	if (ft_strcmp(param->str, "0") == 0 && *(param->flag_field + 5) == 1 && param->precision == 0)
 		param->str = ft_strnew(0);
-	else
-		param->str = ft_un_llitoa(num, base, format);
 	*(param->flag_field + 1) = 0;
 	*(param->flag_field + 2) = 0;
-	if (num == 0)
-		*(param->flag_field + 4) = 0;
 	if (*(param->flag_field + 5) == 1)
 	{
 		*(param->flag_field + 3) = 1;
@@ -353,7 +334,22 @@ void	get_ouxX_str(unsigned long long int num, t_param *param, char format)
 	}
 	else if (*(param->flag_field) == 0)
 		add_zero(param, param->width, format);
-	add_sign_prefix(param, format);
+}
+
+void	get_csp(char format, va_list *ap, t_param *param)
+{
+	if (format == 'c')
+		get_c_str(va_arg(*ap, int), param);
+	if (format == 's')
+		get_s_str(va_arg(*ap, char *), param);
+	if (format == 'S')
+		get_s_str(va_arg(*ap, char *), param);
+	if (format == 'p')
+	{
+		get_ouxX_str((unsigned long long)va_arg(*ap, void *), param, 'x');
+		*(param->flag_field + 4) = 1;
+		add_sign_prefix(param, 'x');
+	}
 }
 
 void	get_diouxX(char format, va_list *ap, t_param *param)
@@ -365,8 +361,10 @@ void	get_diouxX(char format, va_list *ap, t_param *param)
 		num = convert_int_type(va_arg(*ap, long long int), param);
 		get_di_str(num, param);
 	}
-	if (ft_strchr("ouxX", format))
+	if (ft_strchr("ouUxX", format))
 	{
+		if (format == 'U')
+			param->len_field = 3;
 		num = convert_un_type(va_arg(*ap, long long int), param);
 		if (*(param->flag_field + 5) == 1 && *(param->flag_field + 4) == 1 && num == 0 && param->precision == 0 && format == 'o')
 		{
@@ -375,7 +373,10 @@ void	get_diouxX(char format, va_list *ap, t_param *param)
 			param->str[0] = '0';
 		}
 		else
+		{
 			get_ouxX_str(num, param, format);
+			add_sign_prefix(param, format);
+		}
 	}
 }
 
@@ -387,6 +388,8 @@ char	*get_decimal(double num, int precision)
 	int		i;
 	char	*dec_str;
 
+	if (num < 0)
+		num *= -1;
 	prec = 1;
 	i = 0;
 	str = ft_strnew(precision + 1);
@@ -406,37 +409,48 @@ char	*get_decimal(double num, int precision)
 
 void	get_float(va_list *ap, t_param *param)
 {
-	double	num;
+	long double	ld_num;
+	double		d_num;
 
-	num = va_arg(*ap, double);
-	param->str = ft_llitoa((int)num);
+	if (param->len_field == 5)
+	{
+		ld_num = va_arg(*ap, long double);
+		param->str = ft_llitoa((long long int)ld_num);
+	}
+	else
+	{
+		d_num = va_arg(*ap, double);
+		param->str = ft_llitoa((long long int)d_num);
+	}
 	if (*(param->flag_field + 5) == 0)
 		param->precision = 6;
-	if (param->precision != 0)
-		param->str = ft_strcat(param->str, get_decimal(num - (double)(int)num, param->precision));
+	if (param->precision != 0 && param->len_field == 5)
+		param->str = ft_strcat(param->str, get_decimal(ld_num - (long double)(long long int)ld_num, param->precision));
+	else
+		param->str = ft_strcat(param->str, get_decimal(d_num - (double)(long long int)d_num, param->precision));
+
 	add_zero(param, param->width, 'f');
 	add_sign_prefix(param, 'f');
 }
 
 void	get_percent(t_param *param)
 {
-	init_param(param);
 	param->str = ft_strnew(1);
 	param->str[0] = '%';
-	param->str[1] = '\0';
+	add_zero(param, param->width, '%');
 }
 
 int		what_to_print(char **format, va_list *ap)
 {
 	t_param	*param;
-	char	*copy;
 
-	copy = *format;
 	param = (t_param *)malloc(sizeof(t_param));
 	get_param(format, param);
-	if (ft_strchr("csp", **format))
+	if (**format == '\0')
+		param->error = 2;
+	else if (ft_strchr("cspS", **format))
 		get_csp(**format, ap, param);
-	else if (ft_strchr("diouxX", **format))
+	else if (ft_strchr("diouUxX", **format))
 		get_diouxX(**format, ap, param);
 	else if (ft_strchr("f", **format))
 		get_float(ap, param);
@@ -444,13 +458,19 @@ int		what_to_print(char **format, va_list *ap)
 		get_percent(param);
 	else
 	{
-		param->len = -1;
-		init_param(param);
+		param->error = 1;
+		param->width--;
 	}
-	if (param->error == 1)
-		ft_putstr(--copy);
-	else
+	if (param->error != 2)
+	{
 		print(param, **format);
+		if (param->error == 1)
+		{
+			ft_putchar(**format);
+			param->len++;
+		}
+		(*format)++;
+	}
 	return (param->len);
 }
 
@@ -466,17 +486,16 @@ int	ft_printf(char *format, ...)
 		if (*format == '%')
 		{
 			format++;
-			len += what_to_print(&format, &ap);
+			if (*format && ft_strchr("-+ 0#.hlL123456789csSpdiouUxXf%jzt", *format))
+				len += what_to_print(&format, &ap);
 		}
-		else
+		else if (*format && *format != '%')
 		{
 			ft_putchar(*format);
 			len++;
+			format++;
 		}
-		format++;
 	}
 	va_end(ap);
-//	printf("len: %d\n", len);
 	return (len);
 }
-

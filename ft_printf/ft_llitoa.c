@@ -34,6 +34,7 @@ char	*ft_llitoa(long long int n)
 	new_n = n;
 	if (!(str = ft_strnew(len)))
 		return (NULL);
+	bzero(str, len + 1);
 	if (n < 0)
 	{
 		new_n = -n;
@@ -55,6 +56,7 @@ char	*ft_un_llitoa(unsigned long long int n, int base, char format)
 	new_n = n;
 	if (!(str = ft_strnew(len)))
 		return (NULL);
+	bzero(str, len + 1);
 	if (format == 'X')
 		str[--len] = NUMERALS_CAP[new_n % base];
 	else
