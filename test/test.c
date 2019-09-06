@@ -51,9 +51,15 @@ ft_printf("%zd\n", -1);
   ft_printf("%hU\n", 4294967296);
   printf("%hU\n", 4294967296);
 printf("%f\n", 23.00041);
-ft_printf("%Lf\n", (long double)-5.9999999);
-printf("%Lf\n", (long double)-5.9999999);
+ft_printf("%Lf\n", -985.765426499L);
+printf("%Lf\n", -985.765426499L);
 ft_printf("{%f}{%lf}{%Lf}\n", -1.42, -1.42, -1.42l);
 printf("{%f}{%lf}{%Lf}\n", -1.42, -1.42, -1.42l);
+printf("adding:%f\n", 1.5 + 0.5);
+ft_printf("ft:% -5.0f\n", -3.85);
+printf("or:% -5.0f\n", -3.85);
+ft_printf("str:%5.2s\n", "ab");
+ft_printf("str:%5.2s\n", "ab");
+ft_printf("0: %f", (double)-0);
 return (0);
 }

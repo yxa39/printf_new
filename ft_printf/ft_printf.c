@@ -180,37 +180,40 @@ void	get_param(char **format, t_param *param)
 	}
 }
 
-void	add_zero(t_param *param, int width, char format)
+int	get_j(char format, t_param *param)
 {
-	char	*tmp;
-	int		i;
-	int		j;
-	int		len;
+	int	j;
 
-	if (format == 'c')
-		len = 1;
-	else
-		len = (int)ft_strlen(param->str);
-	tmp = ft_strdup(param->str);
-	i = 0;
 	j = *(param->flag_field + 1) + *(param->flag_field + 4) + *(param->flag_field + 6);
 	if (*(param->flag_field + 2) == 1 && *(param->flag_field + 1) == 0)
 		j++;
 	if (*(param->flag_field + 4) == 1 && ft_strchr("xX", format))
 		j++;
-	if (*(param->flag_field + 5) != 1)
-		len += j;
+	return (j);
+}
+
+void	add_zero(t_param *param, int width, char format)
+{
+	char	*tmp;
+	int		i;
+	int		len;
+
+	i = 0;
+	if (format == 'c')
+		len = 1;
+	else
+		len = (int)ft_strlen(param->str);
+	tmp = ft_strdup(param->str);
+	if (*(param->flag_field + 5) != 1 || format == 'f')
+		len += get_j(format, param);
 	if ((*(param->flag_field + 3) == 1 && *(param->flag_field) == 0) || *(param->flag_field + 5) == 1)
 	{
 		if (width - len > 0)
 		{
 			free(param->str);
 			param->str = ft_strnew(width);
-			while (width - len > 0)
-			{
+			while (width-- - len > 0)
 				param->str[i++] = '0';
-				width--;
-			}
 			while (*tmp)
 				param->str[i++] = *(tmp++);
 		}
@@ -377,7 +380,7 @@ void	get_diouxX(char format, va_list *ap, t_param *param)
 	}
 }
 
-char	*get_decimal(double num, int precision)
+char	*get_decimal(long double num, int precision)
 {
 	int		prec;
 	char	*str;
@@ -390,11 +393,11 @@ char	*get_decimal(double num, int precision)
 		num *= -1;
 	prec = 1;
 	i = 0;
-	str = ft_strnew(precision);
+	str = ft_strnew(precision + 1);
 	str[i++] = '.';
 	while (precision-- > 0)
 		prec *= 10;
-	dec_str = ft_llitoa((int)(float)((num - (int)num) * prec));
+	dec_str = ft_llitoa((int)((num - (int)num) * prec));
 	while ((int)ft_strlen(dec_str) < precision_copy--)
 		str[i++] = '0';
 	while (*dec_str)
@@ -411,6 +414,22 @@ long double convert_float(va_list *ap, t_param *param)
 		return ((long double)va_arg(*ap, double));
 }
 
+long double rounding(long double num, t_param *param)
+{
+	long double	tens;
+	int			precision;
+
+	precision = param->precision;
+	tens = 1;
+	while (precision-- != 0)
+		tens *= 10;
+	if (num > 0)
+		num = ((num * tens) + 0.5) / tens;
+	else
+		num = ((num * tens) - 0.5) / tens;
+	return (num);
+}
+
 void	get_float(va_list *ap, t_param *param)
 {
 	long double	num;
@@ -418,12 +437,23 @@ void	get_float(va_list *ap, t_param *param)
 	num = convert_float(ap, param);
 	if (*(param->flag_field + 5) == 0)
 		param->precision = 6;
-	param->str = ft_llitoa((long long int)(float)num);
-	if (param->precision != 0)
-		param->str = ft_strcat(param->str, get_decimal((long double)(float)(num - (long long int)num), param->precision));
 	if (num > -1.0 && num < 0.0)
 		*(param->flag_field + 6) = 1;
-	add_zero(param, param->width, 'f');
+	num = rounding(num, param);
+	param->str = ft_llitoa((long long int)num);
+	if (param->precision != 0)
+		param->str = ft_strcat(param->str, get_decimal((long double)(num - (long long int)num), param->precision));
+	if (*(param->flag_field + 4) == 1 && *(param->flag_field + 5) == 1 && param->precision == 0)
+		param->str = ft_strcat(param->str, ".");
+	if (param->str[0] == '-')
+	{
+		param->str = ft_strdup(++param->str);
+		*(param->flag_field + 6) = 1;
+		*(param->flag_field + 2) = 0;
+		*(param->flag_field + 1) = 0;
+	}
+	if (*(param->flag_field + 3) == 1)
+		add_zero(param, param->width, 'f');
 	add_sign_prefix(param, 'f');
 }
 
@@ -465,6 +495,7 @@ int		what_to_print(char **format, va_list *ap)
 		}
 		(*format)++;
 	}
+	free(param->str);
 	return (param->len);
 }
 
