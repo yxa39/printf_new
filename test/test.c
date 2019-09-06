@@ -50,6 +50,10 @@ ft_printf("%zd\n", -1);
   printf("%jhd\n", 9223372036854775807);
   ft_printf("%hU\n", 4294967296);
   printf("%hU\n", 4294967296);
-
+printf("%f\n", 23.00041);
+ft_printf("%Lf\n", (long double)-5.9999999);
+printf("%Lf\n", (long double)-5.9999999);
+ft_printf("{%f}{%lf}{%Lf}\n", -1.42, -1.42, -1.42l);
+printf("{%f}{%lf}{%Lf}\n", -1.42, -1.42, -1.42l);
 return (0);
 }
