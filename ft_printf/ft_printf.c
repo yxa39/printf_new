@@ -223,23 +223,20 @@ void	get_s_str(char *str, t_param *param)
 	int		i;
 
 	if (str == 0)
-		param->str = ft_strdup("(null)");
-	else
+		str = ft_strdup("(null)");
+	len = (int)ft_strlen(str);
+	if (param->precision < len && *(param->flag_field + 5) == 1)
 	{
-		len = (int)ft_strlen(str);
-		if (param->precision < len && *(param->flag_field + 5) == 1)
-		{
-			len = param->precision;
-			free(param->str);
-			param->str = ft_strnew(len);
-			i = 0;
-			while (param->precision-- > 0)
-				param->str[i++] = *str++;
-			param->str[i] = '\0';
-		}
-		else
-			param->str = ft_strdup(str);
+		len = param->precision;
+		free(param->str);
+		param->str = ft_strnew(len);
+		i = 0;
+		while (param->precision-- > 0)
+			param->str[i++] = *str++;
+		param->str[i] = '\0';
 	}
+	else
+		param->str = ft_strdup(str);
 	if (*(param->flag_field + 3) == 1)
 		add_zero(param, param->width, 's');
 }
@@ -383,52 +380,49 @@ void	get_diouxX(char format, va_list *ap, t_param *param)
 char	*get_decimal(double num, int precision)
 {
 	int		prec;
-	float	dec;
 	char	*str;
 	int		i;
+	int		precision_copy;
 	char	*dec_str;
 
+	precision_copy = precision;
 	if (num < 0)
 		num *= -1;
 	prec = 1;
 	i = 0;
-	str = ft_strnew(precision + 1);
+	str = ft_strnew(precision);
 	str[i++] = '.';
-	while (precision > 0)
-	{
+	while (precision-- > 0)
 		prec *= 10;
-		precision--;
-	}
-	dec = (float)((num - (int)num) * prec);
-	dec_str = ft_llitoa((int)dec);
+	dec_str = ft_llitoa((int)(float)((num - (int)num) * prec));
+	while ((int)ft_strlen(dec_str) < precision_copy--)
+		str[i++] = '0';
 	while (*dec_str)
 		str[i++] = *dec_str++;
 	str[i] = '\0';
 	return (str);
 }
 
+long double convert_float(va_list *ap, t_param *param)
+{
+	if (param->len_field == 5)
+		return (va_arg(*ap, long double));
+	else
+		return ((long double)va_arg(*ap, double));
+}
+
 void	get_float(va_list *ap, t_param *param)
 {
-	long double	ld_num;
-	double		d_num;
+	long double	num;
 
-	if (param->len_field == 5)
-	{
-		ld_num = va_arg(*ap, long double);
-		param->str = ft_llitoa((long long int)ld_num);
-	}
-	else
-	{
-		d_num = va_arg(*ap, double);
-		param->str = ft_llitoa((long long int)d_num);
-	}
+	num = convert_float(ap, param);
 	if (*(param->flag_field + 5) == 0)
 		param->precision = 6;
-	if (param->precision != 0 && param->len_field == 5)
-		param->str = ft_strcat(param->str, get_decimal(ld_num - (long double)(long long int)ld_num, param->precision));
-	else
-		param->str = ft_strcat(param->str, get_decimal(d_num - (double)(long long int)d_num, param->precision));
-
+	param->str = ft_llitoa((long long int)(float)num);
+	if (param->precision != 0)
+		param->str = ft_strcat(param->str, get_decimal((long double)(float)(num - (long long int)num), param->precision));
+	if (num > -1.0 && num < 0.0)
+		*(param->flag_field + 6) = 1;
 	add_zero(param, param->width, 'f');
 	add_sign_prefix(param, 'f');
 }
