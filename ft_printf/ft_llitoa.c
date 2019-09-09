@@ -1,3 +1,14 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   ft_llitoa.c                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: yxie <marvin@42.fr>                        +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2019/09/09 10:13:51 by yxie              #+#    #+#             */
+/*   Updated: 2019/09/09 10:53:23 by yxie             ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
 #include "libft.h"
 
@@ -12,7 +23,6 @@ int		get_long_strlen(long long int n)
 		len++;
 	return (len);
 }
-
 
 int		get_un_long_strlen(unsigned long long int n, int base)
 {
@@ -48,8 +58,8 @@ char	*ft_llitoa(long long int n)
 
 char	*ft_un_llitoa(unsigned long long int n, int base, char format)
 {
-	char			*str;
-	int				len;
+	char					*str;
+	int						len;
 	unsigned long long int	new_n;
 
 	len = get_un_long_strlen(n, base);
